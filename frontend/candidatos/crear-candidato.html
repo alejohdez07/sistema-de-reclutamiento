@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -20,7 +20,7 @@
             <hr class="sidebar-divider my-0">
             <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">MÃ³dulos</div>
+            <div class="sidebar-heading">Módulos</div>
             <li class="nav-item active">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCandidatos">
                     <i class="fas fa-fw fa-user-tie"></i><span>Candidatos</span>
@@ -89,7 +89,7 @@
                                         <div class="form-group"><label>Email *</label><input type="email" class="form-control" id="email" required></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-group"><label>TelÃ©fono</label><input type="text" class="form-control" id="telefono"></div>
+                                        <div class="form-group"><label>Teléfono</label><input type="text" class="form-control" id="telefono"></div>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -108,7 +108,18 @@
                                         <div class="form-group"><label>Estado</label><select class="form-control" id="estado"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
                                     </div>
                                 </div>
-                                <div class="form-group"><label>DirecciÃ³n</label><input type="text" class="form-control" id="direccion"></div>
+                                <div class="form-group">
+                                    <label>Vacante a la que aplica</label>
+                                    <select class="form-control" id="id_vacante">
+                                        <option value="">Sin postulación inicial</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Hoja de Vida (PDF)</label>
+                                    <input type="file" class="form-control-file" id="hoja_vida_pdf" accept="application/pdf">
+                                    <small class="form-text text-muted">Opcional. Tamaño recomendado: hasta 5MB.</small>
+                                </div>
+                                <div class="form-group"><label>Dirección</label><input type="text" class="form-control" id="direccion"></div>
                                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Candidato</button>
                                 <a href="listar-candidatos.html" class="btn btn-secondary">Cancelar</a>
                             </form>
@@ -125,7 +136,77 @@
     <script>
         const usuario=JSON.parse(localStorage.getItem('usuario'));if(!usuario){window.location.href='../login.html'}else{document.getElementById('nombreUsuario').textContent=usuario.nombre}
         function cerrarSesion(){localStorage.removeItem('usuario');window.location.href='../login.html'}
-        document.getElementById('candidatoForm').addEventListener('submit',async(e)=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Guardando...';try{const datos={nombre:document.getElementById('nombre').value,apellido:document.getElementById('apellido').value,email:document.getElementById('email').value,telefono:document.getElementById('telefono').value,documento_identidad:document.getElementById('documento_identidad').value,ciudad:document.getElementById('ciudad').value,linkedin:document.getElementById('linkedin').value,direccion:document.getElementById('direccion').value,estado:document.getElementById('estado').value};await API.crearCandidato(datos);API.mostrarAlerta('Candidato creado exitosamente','success');setTimeout(()=>window.location.href='listar-candidatos.html',1500)}catch(error){API.mostrarAlerta(error.message,'danger');btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Guardar Candidato'}});
+        function leerArchivoComoDataURL(archivo){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('No se pudo leer el archivo PDF'));reader.readAsDataURL(archivo)})}
+
+        async function cargarVacantesActivas(){
+            try{
+                const vacantes=await API.obtenerVacantesActivas();
+                const select=document.getElementById('id_vacante');
+                vacantes.forEach(v=>{select.innerHTML+=`<option value="${v.id}">${v.titulo}</option>`});
+            }catch(error){
+                API.mostrarAlerta('No se pudieron cargar las vacantes activas','warning');
+            }
+        }
+
+        document.getElementById('candidatoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                const archivo = document.getElementById('hoja_vida_pdf').files[0];
+                let hojaVidaNombre = null;
+                let hojaVidaPdf = null;
+
+                if (archivo) {
+                    if (archivo.type !== 'application/pdf') {
+                        throw new Error('Solo se permite archivo PDF');
+                    }
+                    if (archivo.size > 5 * 1024 * 1024) {
+                        throw new Error('El PDF supera el límite de 5MB');
+                    }
+                    hojaVidaNombre = archivo.name;
+                    hojaVidaPdf = await leerArchivoComoDataURL(archivo);
+                }
+
+                const datos = {
+                    nombre: document.getElementById('nombre').value,
+                    apellido: document.getElementById('apellido').value,
+                    email: document.getElementById('email').value,
+                    telefono: document.getElementById('telefono').value,
+                    documento_identidad: document.getElementById('documento_identidad').value,
+                    ciudad: document.getElementById('ciudad').value,
+                    linkedin: document.getElementById('linkedin').value,
+                    direccion: document.getElementById('direccion').value,
+                    estado: document.getElementById('estado').value,
+                    hoja_vida_nombre: hojaVidaNombre,
+                    hoja_vida_pdf: hojaVidaPdf
+                };
+
+                const candidato = await API.crearCandidato(datos);
+
+                const idVacante = document.getElementById('id_vacante').value;
+                if (idVacante) {
+                    try {
+                        await API.crearPostulacion({ id_candidato: candidato.id, id_vacante: Number(idVacante) });
+                    } catch (postError) {
+                        API.mostrarAlerta('Candidato creado, pero falló la postulación: ' + postError.message, 'warning');
+                        setTimeout(() => window.location.href = 'listar-candidatos.html', 2000);
+                        return;
+                    }
+                }
+
+                API.mostrarAlerta('Candidato creado exitosamente', 'success');
+                setTimeout(() => window.location.href = 'listar-candidatos.html', 1500);
+            } catch (error) {
+                API.mostrarAlerta(error.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Candidato';
+            }
+        });
+
+        $(document).ready(cargarVacantesActivas);
     </script>
 </body>
 </html>

@@ -6,8 +6,8 @@
 - Sistema de reclutamiento y registro de aspirantes
 - 6 funcionalidades principales:
   1. Registro de candidatos (datos personales, experiencia, educación)
-  2. Gestión de vacancies (crear, editar, eliminar puestos)
-  3. Postulación a vacancies
+  2. Gestión de vacantes (crear, editar, eliminar puestos)
+  3. Postulación a vacantes
   4. Seguimiento de estado (aplicado, en revisión, entrevistado, contratado, rechazado)
   5. Notas/observaciones por candidato
   6. Panel de estadísticas/dashboard

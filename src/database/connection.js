@@ -11,6 +11,7 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  maxAllowedPacket: 64 * 1024 * 1024 // 64MB para permitir PDFs grandes
 };
 
 // Función para crear la base de datos si no existe

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -20,7 +20,7 @@
             <hr class="sidebar-divider my-0">
             <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">MÃ³dulos</div>
+            <div class="sidebar-heading">Módulos</div>
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCandidatos">
                     <i class="fas fa-fw fa-user-tie"></i><span>Candidatos</span>
@@ -95,9 +95,9 @@
         const usuario=JSON.parse(localStorage.getItem('usuario'));if(!usuario){window.location.href='../login.html'}else{document.getElementById('nombreUsuario').textContent=usuario.nombre}
         function cerrarSesion(){localStorage.removeItem('usuario');window.location.href='../login.html'}
         const estadosColores={aplicado:'primary',en_revision:'info',entrevistado:'warning',pendiente_resultados:'secondary',contratado:'success',rechazado:'danger'};
-        const estadosLabels={aplicado:'Aplicado',en_revision:'En RevisiÃ³n',entrevistado:'Entrevistado',pendiente_resultados:'Pendiente Resultados',contratado:'Contratado',rechazado:'Rechazado'};
-        async function cargarPostulaciones(){try{const postulaciones=await API.obtenerPostulaciones();const tbody=document.getElementById('postulacionesBody');if(postulaciones.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center">No hay postulaciones</td></tr>';return}postulaciones.forEach(p=>{const color=estadosColores[p.estado]||'secondary';tbody.innerHTML+=`<tr><td>${p.id}</td><td>${p.candidato_nombre} ${p.candidato_apellido}</td><td>${p.vacante_titulo}</td><td><span class="badge badge-${color}">${estadosLabels[p.estado]||p.estado}</span></td><td>${API.formatearFecha(p.fecha_postulacion)}</td><td><button class="btn btn-sm btn-primary" onclick="cambiarEstado(${p.id})"><i class="fas fa-edit"></i></button></td></tr>`})}catch(e){console.error(e);API.mostrarAlerta('Error al cargar postulaciones','danger')}}
-        async function cambiarEstado(id){const nuevoEstado=prompt('Ingrese el nuevo estado:\n- aplicado\n- en_revision\n- entrevistado\n- pendiente_resultados\n- contratado\n- rechazado');if(nuevoEstado&&Object.keys(estadosColores).includes(nuevoEstado)){try{await API.actualizarEstadoPostulacion(id,nuevoEstado);API.mostrarAlerta('Estado actualizado','success');cargarPostulaciones()}catch(e){API.mostrarAlerta(e.message,'danger')}}else if(nuevoEstado){API.mostrarAlerta('Estado invÃ¡lido','warning')}}
+        const estadosLabels={aplicado:'Aplicado',en_revision:'En Revisión',entrevistado:'Entrevistado',pendiente_resultados:'Pendiente Resultados',contratado:'Contratado',rechazado:'Rechazado'};
+        async function cargarPostulaciones(){try{const postulaciones=await API.obtenerPostulaciones();const tbody=document.getElementById('postulacionesBody');tbody.innerHTML='';if(postulaciones.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center">No hay postulaciones</td></tr>';return}postulaciones.forEach(p=>{const color=estadosColores[p.estado]||'secondary';tbody.innerHTML+=`<tr><td>${p.id}</td><td>${p.candidato_nombre} ${p.candidato_apellido}</td><td>${p.vacante_titulo}</td><td><span class="badge badge-${color}">${estadosLabels[p.estado]||p.estado}</span></td><td>${API.formatearFecha(p.fecha_postulacion)}</td><td><button class="btn btn-sm btn-primary" onclick="cambiarEstado(${p.id})"><i class="fas fa-edit"></i></button></td></tr>`})}catch(e){console.error(e);API.mostrarAlerta('Error al cargar postulaciones','danger')}}
+        async function cambiarEstado(id){const opcionesEstado={'1':'aplicado','2':'en_revision','3':'entrevistado','4':'pendiente_resultados','5':'contratado','6':'rechazado'};const opcion=prompt('Ingrese el número del nuevo estado:\n1. aplicado\n2. en_revision\n3. entrevistado\n4. pendiente_resultados\n5. contratado\n6. rechazado');const nuevoEstado=opcion?opcionesEstado[opcion.trim()]:null;if(nuevoEstado){try{await API.actualizarEstadoPostulacion(id,nuevoEstado);API.mostrarAlerta('Estado actualizado','success');cargarPostulaciones()}catch(e){API.mostrarAlerta(e.message,'danger')}}else if(opcion){API.mostrarAlerta('Opción inválida. Use un número del 1 al 6','warning')}}
         $(document).ready(cargarPostulaciones);
     </script>
 </body>

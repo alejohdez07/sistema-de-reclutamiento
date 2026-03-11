@@ -1,9 +1,6 @@
-te_path>
-c:/Users/User/Desktop/comparacion/sistema-reclutamiento/INSTRUCCIONES.md
-</absolute_path>
-<parameter name="content"># 🚀 Instrucciones para Ejecutar el Sistema de Reclutamiento
+# 🚀 Instrucciones para Ejecutar el Sistema de Reclutamiento
 
-## Prerequisites / Prerrequisitos
+## Prerrequisitos
 
 1. **XAMPP** instalado (para MySQL)
 2. **Node.js** instalado
@@ -109,3 +106,5 @@ sistema-reclutamiento/
     ├── login.html
     ├── index.html
     └── ...
+```
+

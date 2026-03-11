@@ -33,15 +33,23 @@ const initializeDatabase = async () => {
         direccion VARCHAR(255),
         ciudad VARCHAR(100),
         pais VARCHAR(100),
-       linkedin VARCHAR(255),
+        linkedin VARCHAR(255),
         portfolio VARCHAR(255),
         foto VARCHAR(255),
+        hoja_vida_nombre VARCHAR(255),
+        hoja_vida_pdf LONGTEXT,
         estado VARCHAR(50) DEFAULT 'activo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_email (email),
         INDEX idx_estado (estado)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await connection.query(`
+      ALTER TABLE candidatos
+      ADD COLUMN IF NOT EXISTS hoja_vida_nombre VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS hoja_vida_pdf LONGTEXT
     `);
 
     // Crear tabla experiencia_laboral

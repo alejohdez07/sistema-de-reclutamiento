@@ -15,7 +15,7 @@ const handleError = (res, error, customMessage = "Error en la operación") => {
 
   if (error.code === 'ER_NO_REFERENCED_ROW_2') {
     return res.status(400).json({
-      message: "El registro referencedo no existe. Verifique los datos.",
+      message: "El registro referenciado no existe. Verifique los datos.",
       error: error.message
     });
   }

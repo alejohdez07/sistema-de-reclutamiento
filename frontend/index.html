@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -30,7 +30,7 @@
                 <a class="nav-link" href="index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a>
             </li>
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">MÃ³dulos</div>
+            <div class="sidebar-heading">Módulos</div>
             
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCandidatos">
@@ -149,7 +149,7 @@
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Ãšltimos 30 dÃ­as</div>
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Últimos 30 días</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800" id="postulacionesRecientes">-</div>
                                         </div>
                                         <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
@@ -175,7 +175,7 @@
                         <div class="col-lg-6 mb-4">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Vacantes por Ãrea</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Vacantes por Área</h6>
                                 </div>
                                 <div class="card-body" id="vacantesArea">
                                     <p class="text-muted">Cargando...</p>
@@ -202,7 +202,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
     <script src="js/api.js"></script>
     <script>
-        // Verificar autenticaciÃ³n
+        // Verificar autenticación
         const usuario = JSON.parse(localStorage.getItem('usuario'));
         if (!usuario) {
             window.location.href = 'login.html';
@@ -215,7 +215,7 @@
             window.location.href = 'login.html';
         }
 
-        // Cargar estadÃ­sticas
+        // Cargar estadísticas
         async function cargarEstadisticas() {
             try {
                 const stats = await API.obtenerEstadisticas();
@@ -241,7 +241,7 @@
                         const color = colores[item.estado] || 'secondary';
                         const labels = {
                             'aplicado': 'Aplicado',
-                            'en_revision': 'En RevisiÃ³n',
+                            'en_revision': 'En Revisión',
                             'entrevistado': 'Entrevistado',
                             'pendiente_resultados': 'Pendiente Resultados',
                             'contratado': 'Contratado',
@@ -254,20 +254,20 @@
                     estadoContainer.innerHTML = '<p class="text-muted">No hay postulaciones</p>';
                 }
 
-                // Vacantes por Ã¡rea
+                // Vacantes por área
                 const areaContainer = document.getElementById('vacantesArea');
                 if (stats.vacantesPorArea && stats.vacantesPorArea.length > 0) {
                     let html = '';
                     stats.vacantesPorArea.forEach(item => {
-                        html += `<div class="mb-2"><strong>${item.area || 'Sin Ã¡rea'}</strong>: ${item.total} vacante(s)</div>`;
+                        html += `<div class="mb-2"><strong>${item.area || 'Sin área'}</strong>: ${item.total} vacante(s)</div>`;
                     });
                     areaContainer.innerHTML = html;
                 } else {
                     areaContainer.innerHTML = '<p class="text-muted">No hay vacantes</p>';
                 }
             } catch (error) {
-                console.error('Error cargando estadÃ­sticas:', error);
-                API.mostrarAlerta('Error al cargar estadÃ­sticas', 'danger');
+                console.error('Error cargando estadísticas:', error);
+                API.mostrarAlerta('Error al cargar estadísticas', 'danger');
             }
         }
 

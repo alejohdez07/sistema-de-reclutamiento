@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -76,7 +76,7 @@
             <div class="login-image d-none d-md-flex flex-column align-items-center justify-content-center">
                 <i class="fas fa-users"></i>
                 <h2 class="brand-text">Sistema de Reclutamiento</h2>
-                <p>GestiÃ³n de talento humano</p>
+                <p>Gestión de talento humano</p>
             </div>
             <div class="login-form">
                 <div class="text-center mb-4">
@@ -92,11 +92,11 @@
                         <input type="email" class="form-control" id="email" placeholder="tu@email.com" required>
                     </div>
                     <div class="form-group">
-                        <label for="password">ContraseÃ±a</label>
-                        <input type="password" class="form-control" id="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
+                        <label for="password">Contraseña</label>
+                        <input type="password" class="form-control" id="password" placeholder="••••••••" required>
                     </div>
                     <button type="submit" class="btn btn-primary btn-login btn-block">
-                        <i class="fas fa-sign-in-alt"></i> Iniciar SesiÃ³n
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                     </button>
                 </form>
 
@@ -129,7 +129,7 @@
                 // Guardar usuario en localStorage
                 localStorage.setItem('usuario', JSON.stringify(usuario));
                 
-                API.mostrarAlerta('Â¡Bienvenido ' + usuario.nombre + '!', 'success');
+                API.mostrarAlerta('¡Bienvenido ' + usuario.nombre + '!', 'success');
                 
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -137,11 +137,11 @@
             } catch (error) {
                 API.mostrarAlerta(error.message, 'danger');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar SesiÃ³n';
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
             }
         });
 
-        // Verificar si ya estÃ¡ logueado
+        // Verificar si ya está logueado
         if (localStorage.getItem('usuario')) {
             window.location.href = 'index.html';
         }

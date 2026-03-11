@@ -80,6 +80,10 @@ async function obtenerVacantes() {
     return await hacerPeticion('/vacantes');
 }
 
+async function obtenerVacantesActivas() {
+    return await hacerPeticion('/vacantes/activas');
+}
+
 async function obtenerVacante(id) {
     return await hacerPeticion(`/vacantes/${id}`);
 }
@@ -111,6 +115,10 @@ async function crearPostulacion(datos) {
 
 async function actualizarEstadoPostulacion(id, estado) {
     return await hacerPeticion(`/postulaciones/${id}/estado`, 'PATCH', { estado });
+}
+
+async function eliminarPostulacion(id) {
+    return await hacerPeticion(`/postulaciones/${id}`, 'DELETE');
 }
 
 // Notas
@@ -166,6 +174,7 @@ window.API = {
     actualizarCandidato,
     eliminarCandidato,
     obtenerVacantes,
+    obtenerVacantesActivas,
     obtenerVacante,
     crearVacante,
     actualizarVacante,
@@ -174,6 +183,7 @@ window.API = {
     obtenerPostulacionesPorVacante,
     crearPostulacion,
     actualizarEstadoPostulacion,
+    eliminarPostulacion,
     crearNota,
     login,
     obtenerEstadisticas,

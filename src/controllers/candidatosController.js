@@ -1,5 +1,26 @@
 const { getPool } = require("../database/connection");
 const { handleError } = require("../utils/errorHandler");
+const fs = require("fs");
+const path = require("path");
+
+const guardarHojaVidaEnDisco = (nombreArchivo, dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== "string" || !dataUrl.startsWith("data:application/pdf;base64,")) {
+    return { nombre: nombreArchivo || null, ruta: dataUrl || null };
+  }
+
+  const base64 = dataUrl.split(",")[1] || "";
+  const buffer = Buffer.from(base64, "base64");
+  const nombreSeguro = (nombreArchivo || "hoja_vida.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
+  const nombreFinal = `${Date.now()}_${nombreSeguro}`;
+  const rutaRelativa = `/uploads/hojas_vida/${nombreFinal}`;
+  const projectRoot = path.resolve(__dirname, "..", "..");
+  const rutaAbsoluta = path.join(projectRoot, "uploads", "hojas_vida", nombreFinal);
+
+  fs.mkdirSync(path.dirname(rutaAbsoluta), { recursive: true });
+  fs.writeFileSync(rutaAbsoluta, buffer);
+
+  return { nombre: nombreArchivo || nombreSeguro, ruta: rutaRelativa };
+};
 
 // Obtener todos los candidatos
 const getCandidatos = async (req, res) => {
@@ -86,7 +107,7 @@ const createCandidato = async (req, res) => {
     const {
       nombre, apellido, email, telefono, documento_identidad,
       fecha_nacimiento, genero, direccion, ciudad, pais,
-      linkedin, portfolio, foto, estado
+      linkedin, portfolio, foto, hoja_vida_nombre, hoja_vida_pdf, estado
     } = req.body;
 
     if (!nombre || !apellido || !email) {
@@ -95,14 +116,27 @@ const createCandidato = async (req, res) => {
 
     const pool = getPool();
     const connection = await pool.getConnection();
+
+    if (documento_identidad) {
+      const [existenteDocumento] = await connection.query(
+        "SELECT id FROM candidatos WHERE documento_identidad = ? LIMIT 1",
+        [documento_identidad]
+      );
+      if (existenteDocumento.length > 0) {
+        connection.release();
+        return res.status(409).json({ message: "Ya existe un candidato con ese documento de identidad" });
+      }
+    }
+
+    const hojaVidaGuardada = guardarHojaVidaEnDisco(hoja_vida_nombre, hoja_vida_pdf);
     
     const [result] = await connection.query(
       `INSERT INTO candidatos (nombre, apellido, email, telefono, documento_identidad,
-        fecha_nacimiento, genero, direccion, ciudad, pais, linkedin, portfolio, foto, estado) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        fecha_nacimiento, genero, direccion, ciudad, pais, linkedin, portfolio, foto, hoja_vida_nombre, hoja_vida_pdf, estado) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [nombre, apellido, email, telefono, documento_identidad,
        fecha_nacimiento, genero, direccion, ciudad, pais,
-       linkedin, portfolio, foto, estado || "activo"]
+       linkedin, portfolio, foto, hojaVidaGuardada.nombre, hojaVidaGuardada.ruta, estado || "activo"]
     );
     connection.release();
 
@@ -122,21 +156,34 @@ const updateCandidato = async (req, res) => {
     const {
       nombre, apellido, email, telefono, documento_identidad,
       fecha_nacimiento, genero, direccion, ciudad, pais,
-      linkedin, portfolio, foto, estado
+      linkedin, portfolio, foto, hoja_vida_nombre, hoja_vida_pdf, estado
     } = req.body;
 
     const pool = getPool();
     const connection = await pool.getConnection();
+
+    if (documento_identidad) {
+      const [existenteDocumento] = await connection.query(
+        "SELECT id FROM candidatos WHERE documento_identidad = ? AND id <> ? LIMIT 1",
+        [documento_identidad, id]
+      );
+      if (existenteDocumento.length > 0) {
+        connection.release();
+        return res.status(409).json({ message: "Ya existe otro candidato con ese documento de identidad" });
+      }
+    }
+
+    const hojaVidaGuardada = guardarHojaVidaEnDisco(hoja_vida_nombre, hoja_vida_pdf);
     
     const [result] = await connection.query(
       `UPDATE candidatos SET 
         nombre = ?, apellido = ?, email = ?, telefono = ?, documento_identidad = ?,
         fecha_nacimiento = ?, genero = ?, direccion = ?, ciudad = ?, pais = ?,
-        linkedin = ?, portfolio = ?, foto = ?, estado = ?
+        linkedin = ?, portfolio = ?, foto = ?, hoja_vida_nombre = ?, hoja_vida_pdf = ?, estado = ?
        WHERE id = ?`,
       [nombre, apellido, email, telefono, documento_identidad,
        fecha_nacimiento, genero, direccion, ciudad, pais,
-       linkedin, portfolio, foto, estado, id]
+       linkedin, portfolio, foto, hojaVidaGuardada.nombre, hojaVidaGuardada.ruta, estado, id]
     );
     connection.release();
 

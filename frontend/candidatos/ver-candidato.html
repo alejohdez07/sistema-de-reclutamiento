@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -20,7 +20,7 @@
             <hr class="sidebar-divider my-0">
             <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">MÃ³dulos</div>
+            <div class="sidebar-heading">Módulos</div>
             <li class="nav-item active">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCandidatos">
                     <i class="fas fa-fw fa-user-tie"></i><span>Candidatos</span>
@@ -76,7 +76,12 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Datos Personales</h6></div>
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Datos Personales</h6>
+                                    <button type="button" class="btn btn-sm btn-primary" id="btnEditarDatos" onclick="activarEdicion()">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                </div>
                                 <div class="card-body" id="datosPersonales"><p class="text-muted">Cargando...</p></div>
                             </div>
                         </div>
@@ -92,7 +97,7 @@
                         <div class="card-body">
                             <form id="notaForm" class="mb-3">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="notaTitulo" placeholder="TÃ­tulo">
+                                    <input type="text" class="form-control" id="notaTitulo" placeholder="Título">
                                     <input type="text" class="form-control" id="notaContenido" placeholder="Contenido de la nota..." required>
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">Agregar Nota</button>
@@ -111,13 +116,198 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
     <script src="../js/api.js"></script>
     <script>
-        const usuario=JSON.parse(localStorage.getItem('usuario'));if(!usuario){window.location.href='../login.html'}else{document.getElementById('nombreUsuario').textContent=usuario.nombre}
-        function cerrarSesion(){localStorage.removeItem('usuario');window.location.href='../login.html'}
-        const urlParams=new URLSearchParams(window.location.search);const candidatoId=urlParams.get('id');
-        async function cargarCandidato(){try{const c=await API.obtenerCandidato(candidatoId);document.getElementById('datosPersonales').innerHTML=`<p><strong>Nombre:</strong> ${c.nombre} ${c.apellido}</p><p><strong>Email:</strong> ${c.email}</p><p><strong>TelÃ©fono:</strong> ${c.telefono||'-'}</p><p><strong>Ciudad:</strong> ${c.ciudad||'-'}</p><p><strong>LinkedIn:</strong> ${c.linkedin?'<a href="'+c.linkedin+'" target="_blank">Perfil</a>':'-'}</p><p><strong>Estado:</strong> <span class="badge badge-${c.estado==='activo'?'success':'secondary'}">${c.estado}</span></p>`;
-        const postulacionesList=document.getElementById('postulacionesList');if(c.postulaciones&&c.postulaciones.length>0){let html='';c.postulaciones.forEach(p=>{const colores={aplicado:'primary',en_revision:'info',entrevistado:'warning',pendiente_resultados:'secondary',contratado:'success',rechazado:'danger'};html+=`<div class="mb-2"><span class="badge badge-${colores[p.estado]||'secondary'}">${p.estado}</span> - ${p.vacante_titulo}</div>`});postulacionesList.innerHTML=html}else{postulacionesList.innerHTML='<p class="text-muted">No hay postulaciones</p>'}
-        const notasList=document.getElementById('notasList');if(c.notas&&c.notas.length>0){let html='';c.notas.forEach(n=>{html+=`<div class="mb-2"><strong>${n.titulo||'Sin tÃ­tulo'}</strong>: ${n.contenido}<br><small class="text-muted">Por ${n.nombre_usuario} - ${API.formatearFecha(n.created_at)}</small></div>`});notasList.innerHTML=html}else{notasList.innerHTML='<p class="text-muted">No hay notas</p>'}}catch(e){console.error(e);API.mostrarAlerta('Error al cargar candidato','danger')}}
-        document.getElementById('notaForm').addEventListener('submit',async(e)=>{e.preventDefault();try{const datos={id_candidato:candidatoId,id_usuario:usuario.id,titulo:document.getElementById('notaTitulo').value,contenido:document.getElementById('notaContenido').value};await API.crearNota(datos);API.mostrarAlerta('Nota agregada','success');document.getElementById('notaContenido').value='';cargarCandidato()}catch(error){API.mostrarAlerta(error.message,'danger')}});
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuario) {
+            window.location.href = '../login.html';
+        } else {
+            document.getElementById('nombreUsuario').textContent = usuario.nombre;
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('usuario');
+            window.location.href = '../login.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const candidatoId = urlParams.get('id');
+        let candidatoActual = null;
+        let editandoDatos = false;
+        let vacantesActivas = [];
+
+        function valorSeguro(valor) {
+            return valor ? String(valor).replace(/"/g, '&quot;') : '';
+        }
+
+        function obtenerPostulacionPrincipal() {
+            if (!candidatoActual || !candidatoActual.postulaciones || candidatoActual.postulaciones.length === 0) {
+                return null;
+            }
+            return candidatoActual.postulaciones[0];
+        }
+
+        async function cargarVacantesActivasParaEdicion() {
+            if (vacantesActivas.length > 0) {
+                return;
+            }
+            vacantesActivas = await API.obtenerVacantesActivas();
+        }
+
+        function renderDatosPersonales() {
+            const contenedor = document.getElementById('datosPersonales');
+            const btnEditar = document.getElementById('btnEditarDatos');
+
+            if (!candidatoActual) {
+                contenedor.innerHTML = '<p class="text-muted">Sin datos</p>';
+                btnEditar.style.display = 'none';
+                return;
+            }
+
+            btnEditar.style.display = editandoDatos ? 'none' : 'inline-block';
+
+            if (!editandoDatos) {
+                const postulacionPrincipal = obtenerPostulacionPrincipal();
+                const hojaVidaHtml = candidatoActual.hoja_vida_pdf
+                    ? `<a class="btn btn-sm btn-outline-primary" href="${candidatoActual.hoja_vida_pdf}" download="${valorSeguro(candidatoActual.hoja_vida_nombre || 'hoja_vida.pdf')}"><i class="fas fa-file-pdf"></i> Descargar hoja de vida</a>`
+                    : 'No se cargó hoja de vida';
+                contenedor.innerHTML = `<p><strong>Nombre:</strong> ${candidatoActual.nombre} ${candidatoActual.apellido}</p><p><strong>Email:</strong> ${candidatoActual.email}</p><p><strong>Teléfono:</strong> ${candidatoActual.telefono || '-'}</p><p><strong>Ciudad:</strong> ${candidatoActual.ciudad || '-'}</p><p><strong>LinkedIn:</strong> ${candidatoActual.linkedin ? '<a href="' + candidatoActual.linkedin + '" target="_blank">Perfil</a>' : '-'}</p><p><strong>Vacante a la que aplica:</strong> ${postulacionPrincipal ? postulacionPrincipal.vacante_titulo : '-'}</p><p><strong>Hoja de vida:</strong> ${hojaVidaHtml}</p><p><strong>Estado:</strong> <span class="badge badge-${candidatoActual.estado === 'activo' ? 'success' : 'secondary'}">${candidatoActual.estado}</span></p>`;
+                return;
+            }
+
+            const postulacionPrincipal = obtenerPostulacionPrincipal();
+            let opcionesVacantes = '<option value="">Sin postulación</option>';
+            vacantesActivas.forEach((v) => {
+                opcionesVacantes += `<option value="${v.id}">${v.titulo}</option>`;
+            });
+            if (postulacionPrincipal && !vacantesActivas.some((v) => Number(v.id) === Number(postulacionPrincipal.id_vacante))) {
+                opcionesVacantes += `<option value="${postulacionPrincipal.id_vacante}">${postulacionPrincipal.vacante_titulo}</option>`;
+            }
+
+            contenedor.innerHTML = `<form id="editarCandidatoForm" onsubmit="guardarEdicion(event)"><div class="row"><div class="col-md-6"><div class="form-group"><label>Nombre</label><input type="text" class="form-control" id="edit_nombre" value="${valorSeguro(candidatoActual.nombre)}" required></div></div><div class="col-md-6"><div class="form-group"><label>Apellido</label><input type="text" class="form-control" id="edit_apellido" value="${valorSeguro(candidatoActual.apellido)}" required></div></div></div><div class="row"><div class="col-md-6"><div class="form-group"><label>Email</label><input type="email" class="form-control" id="edit_email" value="${valorSeguro(candidatoActual.email)}" required></div></div><div class="col-md-6"><div class="form-group"><label>Teléfono</label><input type="text" class="form-control" id="edit_telefono" value="${valorSeguro(candidatoActual.telefono)}"></div></div></div><div class="row"><div class="col-md-6"><div class="form-group"><label>Documento de Identidad</label><input type="text" class="form-control" id="edit_documento_identidad" value="${valorSeguro(candidatoActual.documento_identidad)}"></div></div><div class="col-md-6"><div class="form-group"><label>Ciudad</label><input type="text" class="form-control" id="edit_ciudad" value="${valorSeguro(candidatoActual.ciudad)}"></div></div></div><div class="form-group"><label>Dirección</label><input type="text" class="form-control" id="edit_direccion" value="${valorSeguro(candidatoActual.direccion)}"></div><div class="form-group"><label>LinkedIn</label><input type="url" class="form-control" id="edit_linkedin" value="${valorSeguro(candidatoActual.linkedin)}"></div><div class="form-group"><label>Vacante a la que aplica</label><select class="form-control" id="edit_id_vacante">${opcionesVacantes}</select></div><div class="form-group"><label>Estado</label><select class="form-control" id="edit_estado"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div><button type="submit" class="btn btn-primary btn-sm mr-2"><i class="fas fa-save"></i> Guardar cambios</button><button type="button" class="btn btn-secondary btn-sm" onclick="cancelarEdicion()">Cancelar</button></form>`;
+
+            document.getElementById('edit_estado').value = candidatoActual.estado || 'activo';
+            document.getElementById('edit_id_vacante').value = postulacionPrincipal ? String(postulacionPrincipal.id_vacante) : '';
+        }
+
+        async function activarEdicion() {
+            try {
+                await cargarVacantesActivasParaEdicion();
+                editandoDatos = true;
+                renderDatosPersonales();
+            } catch (error) {
+                API.mostrarAlerta('No se pudieron cargar las vacantes activas', 'warning');
+            }
+        }
+
+        function cancelarEdicion() {
+            editandoDatos = false;
+            renderDatosPersonales();
+        }
+
+        async function guardarEdicion(evento) {
+            evento.preventDefault();
+            const btn = evento.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                const datosActualizados = {
+                    nombre: document.getElementById('edit_nombre').value,
+                    apellido: document.getElementById('edit_apellido').value,
+                    email: document.getElementById('edit_email').value,
+                    telefono: document.getElementById('edit_telefono').value,
+                    documento_identidad: document.getElementById('edit_documento_identidad').value,
+                    ciudad: document.getElementById('edit_ciudad').value,
+                    direccion: document.getElementById('edit_direccion').value,
+                    linkedin: document.getElementById('edit_linkedin').value,
+                    estado: document.getElementById('edit_estado').value,
+                    fecha_nacimiento: candidatoActual.fecha_nacimiento,
+                    genero: candidatoActual.genero,
+                    pais: candidatoActual.pais,
+                    portfolio: candidatoActual.portfolio,
+                    foto: candidatoActual.foto,
+                    hoja_vida_nombre: candidatoActual.hoja_vida_nombre,
+                    hoja_vida_pdf: candidatoActual.hoja_vida_pdf
+                };
+
+                await API.actualizarCandidato(candidatoId, datosActualizados);
+
+                const postulacionPrincipal = obtenerPostulacionPrincipal();
+                const vacanteActualId = postulacionPrincipal ? Number(postulacionPrincipal.id_vacante) : null;
+                const vacanteNuevaRaw = document.getElementById('edit_id_vacante').value;
+                const vacanteNuevaId = vacanteNuevaRaw ? Number(vacanteNuevaRaw) : null;
+
+                if (vacanteActualId !== vacanteNuevaId) {
+                    if (postulacionPrincipal) {
+                        await API.eliminarPostulacion(postulacionPrincipal.id);
+                    }
+                    if (vacanteNuevaId) {
+                        await API.crearPostulacion({ id_candidato: Number(candidatoId), id_vacante: vacanteNuevaId });
+                    }
+                }
+
+                candidatoActual = { ...candidatoActual, ...datosActualizados };
+                editandoDatos = false;
+                await cargarCandidato();
+                API.mostrarAlerta('Datos del candidato actualizados', 'success');
+            } catch (error) {
+                API.mostrarAlerta(error.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+            }
+        }
+
+        async function cargarCandidato() {
+            try {
+                const c = await API.obtenerCandidato(candidatoId);
+                candidatoActual = c;
+                renderDatosPersonales();
+
+                const postulacionesList = document.getElementById('postulacionesList');
+                if (c.postulaciones && c.postulaciones.length > 0) {
+                    let html = '';
+                    c.postulaciones.forEach((p) => {
+                        const colores = { aplicado: 'primary', en_revision: 'info', entrevistado: 'warning', pendiente_resultados: 'secondary', contratado: 'success', rechazado: 'danger' };
+                        html += `<div class="mb-2"><span class="badge badge-${colores[p.estado] || 'secondary'}">${p.estado}</span> - ${p.vacante_titulo}</div>`;
+                    });
+                    postulacionesList.innerHTML = html;
+                } else {
+                    postulacionesList.innerHTML = '<p class="text-muted">No hay postulaciones</p>';
+                }
+
+                const notasList = document.getElementById('notasList');
+                if (c.notas && c.notas.length > 0) {
+                    let html = '';
+                    c.notas.forEach((n) => {
+                        html += `<div class="mb-2"><strong>${n.titulo || 'Sin título'}</strong>: ${n.contenido}<br><small class="text-muted">Por ${n.nombre_usuario} - ${API.formatearFecha(n.created_at)}</small></div>`;
+                    });
+                    notasList.innerHTML = html;
+                } else {
+                    notasList.innerHTML = '<p class="text-muted">No hay notas</p>';
+                }
+            } catch (e) {
+                console.error(e);
+                API.mostrarAlerta('Error al cargar candidato', 'danger');
+            }
+        }
+
+        document.getElementById('notaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const datos = {
+                    id_candidato: candidatoId,
+                    id_usuario: usuario.id,
+                    titulo: document.getElementById('notaTitulo').value,
+                    contenido: document.getElementById('notaContenido').value
+                };
+                await API.crearNota(datos);
+                API.mostrarAlerta('Nota agregada', 'success');
+                document.getElementById('notaContenido').value = '';
+                cargarCandidato();
+            } catch (error) {
+                API.mostrarAlerta(error.message, 'danger');
+            }
+        });
+
         $(document).ready(cargarCandidato);
     </script>
 </body>

@@ -7,7 +7,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email y contraseÃ±a son requeridos" });
+      return res.status(400).json({ message: "Email y contraseña son requeridos" });
     }
 
     const pool = getPool();
@@ -30,7 +30,7 @@ const login = async (req, res) => {
       res.status(401).json({ message: "Credenciales incorrectas" });
     }
   } catch (error) {
-    handleError(res, error, "Error al verificar el inicio de sesiÃ³n");
+    handleError(res, error, "Error al verificar el inicio de sesión");
   }
 };
 
@@ -40,7 +40,7 @@ const register = async (req, res) => {
     const { nombre, email, password, rol } = req.body;
 
     if (!nombre || !email || !password) {
-      return res.status(400).json({ message: "Nombre, email y contraseÃ±a son requeridos" });
+      return res.status(400).json({ message: "Nombre, email y contraseña son requeridos" });
     }
 
     const pool = getPool();
