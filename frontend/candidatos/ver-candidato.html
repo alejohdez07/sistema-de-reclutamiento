@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ver Candidato</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>body{font-family:'Nunito',sans-serif}.bg-gradient-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}</style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="../index.html">
+                <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-users"></i></div>
+                <div class="sidebar-brand-text mx-3">Reclutamiento</div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">MÃ³dulos</div>
+            <li class="nav-item active">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCandidatos">
+                    <i class="fas fa-fw fa-user-tie"></i><span>Candidatos</span>
+                </a>
+                <div id="collapseCandidatos" class="collapse show" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item active" href="listar-candidatos.html">Ver Candidatos</a>
+                        <a class="collapse-item" href="crear-candidato.html">Nuevo Candidato</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVacantes">
+                    <i class="fas fa-fw fa-briefcase"></i><span>Vacantes</span>
+                </a>
+                <div id="collapseVacantes" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="../vacantes/listar-vacantes.html">Ver Vacantes</a>
+                        <a class="collapse-item" href="../vacantes/crear-vacante.html">Nueva Vacante</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="../postulaciones/listar-postulaciones.html">
+                    <i class="fas fa-fw fa-file-alt"></i><span>Postulaciones</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="text-center d-none d-md-inline"><button class="rounded-circle border-0" id="sidebarToggle"></button></div>
+        </ul>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="nombreUsuario">Usuario</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Detalle del Candidato</h1>
+                        <a href="listar-candidatos.html" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Volver</a>
+                    </div>
+                    <div id="alertContainer"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Datos Personales</h6></div>
+                                <div class="card-body" id="datosPersonales"><p class="text-muted">Cargando...</p></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Postulaciones</h6></div>
+                                <div class="card-body" id="postulacionesList"><p class="text-muted">Cargando...</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Notas</h6></div>
+                        <div class="card-body">
+                            <form id="notaForm" class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="notaTitulo" placeholder="TÃ­tulo">
+                                    <input type="text" class="form-control" id="notaContenido" placeholder="Contenido de la nota..." required>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">Agregar Nota</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="notasList"><p class="text-muted">No hay notas</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="sticky-footer bg-white"><div class="container my-auto"><div class="copyright text-center my-auto"><span>Sistema de Reclutamiento &copy; 2024</span></div></div></footer>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        const usuario=JSON.parse(localStorage.getItem('usuario'));if(!usuario){window.location.href='../login.html'}else{document.getElementById('nombreUsuario').textContent=usuario.nombre}
+        function cerrarSesion(){localStorage.removeItem('usuario');window.location.href='../login.html'}
+        const urlParams=new URLSearchParams(window.location.search);const candidatoId=urlParams.get('id');
+        async function cargarCandidato(){try{const c=await API.obtenerCandidato(candidatoId);document.getElementById('datosPersonales').innerHTML=`<p><strong>Nombre:</strong> ${c.nombre} ${c.apellido}</p><p><strong>Email:</strong> ${c.email}</p><p><strong>TelÃ©fono:</strong> ${c.telefono||'-'}</p><p><strong>Ciudad:</strong> ${c.ciudad||'-'}</p><p><strong>LinkedIn:</strong> ${c.linkedin?'<a href="'+c.linkedin+'" target="_blank">Perfil</a>':'-'}</p><p><strong>Estado:</strong> <span class="badge badge-${c.estado==='activo'?'success':'secondary'}">${c.estado}</span></p>`;
+        const postulacionesList=document.getElementById('postulacionesList');if(c.postulaciones&&c.postulaciones.length>0){let html='';c.postulaciones.forEach(p=>{const colores={aplicado:'primary',en_revision:'info',entrevistado:'warning',pendiente_resultados:'secondary',contratado:'success',rechazado:'danger'};html+=`<div class="mb-2"><span class="badge badge-${colores[p.estado]||'secondary'}">${p.estado}</span> - ${p.vacante_titulo}</div>`});postulacionesList.innerHTML=html}else{postulacionesList.innerHTML='<p class="text-muted">No hay postulaciones</p>'}
+        const notasList=document.getElementById('notasList');if(c.notas&&c.notas.length>0){let html='';c.notas.forEach(n=>{html+=`<div class="mb-2"><strong>${n.titulo||'Sin tÃ­tulo'}</strong>: ${n.contenido}<br><small class="text-muted">Por ${n.nombre_usuario} - ${API.formatearFecha(n.created_at)}</small></div>`});notasList.innerHTML=html}else{notasList.innerHTML='<p class="text-muted">No hay notas</p>'}}catch(e){console.error(e);API.mostrarAlerta('Error al cargar candidato','danger')}}
+        document.getElementById('notaForm').addEventListener('submit',async(e)=>{e.preventDefault();try{const datos={id_candidato:candidatoId,id_usuario:usuario.id,titulo:document.getElementById('notaTitulo').value,contenido:document.getElementById('notaContenido').value};await API.crearNota(datos);API.mostrarAlerta('Nota agregada','success');document.getElementById('notaContenido').value='';cargarCandidato()}catch(error){API.mostrarAlerta(error.message,'danger')}});
+        $(document).ready(cargarCandidato);
+    </script>
+</body>
+</html>
+
+
